@@ -1,32 +1,56 @@
-<!DOCTYPE html>
-<html lang="fr">
 <?php
+// Activer le mode debug en développement
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-session_start(); // ✅ Une seule fois
+
+// Démarrer la session (UNE SEULE FOIS)
+session_start();
+
+// Rediriger si déjà connecté
+if (isset($_SESSION['user_id'])) {
+    header("Location: dashboard.php");
+    exit();
+}
 
 // Inclure la config
 define('YGGDRASIL_CONFIG', true);
 require_once 'config.php';
 
-$error = ''; // Variable pour stocker l'erreur
+// Variable pour stocker les erreurs
+$error = '';
 
 // Traitement du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
+    // Validation des champs
     if (empty($email) || empty($password)) {
         $error = "Veuillez remplir tous les champs.";
     } else {
         try {
-            $stmt = getDatabase()->prepare("SELECT * FROM users WHERE email = ?");
+            // Rechercher l'utilisateur
+            $stmt = getDatabase()->prepare("SELECT id, firstname, password FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
+            // Vérifier le mot de passe
             if ($user && password_verify($password, $user['password'])) {
                 $_SESSION['user_id'] = $user['id'];
-                $_SESSION['firstname'] = $user['firstname']; // Optionnel
+                $_SESSION['firstname'] = $user['firstname'];
+
+                // "Se souvenir de moi"
+                if (isset($_POST['remember'])) {
+                    $token = bin2hex(random_bytes(32));
+                    $expires = time() + (30 * 24 * 60 * 60); // 30 jours
+
+                    $stmt = getDatabase()->prepare("UPDATE users SET remember_token = ? WHERE id = ?");
+                    $stmt->execute([$token, $user['id']]);
+
+                    setcookie('remember', $token, $expires, '/', '', false, true);
+                }
+
+                // Rediriger vers le tableau de bord
                 header("Location: dashboard.php");
                 exit();
             } else {
@@ -39,6 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
+<!DOCTYPE html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="darkreader-disable" content="true">
