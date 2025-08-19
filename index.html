@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="darkreader-disable" content="true">
+    <meta name="color-scheme" content="light">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yggdrasil - Arbre généalogique</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- OpenDyslexic -->
+    <link href="https://fonts.cdnfonts.com/css/open-dyslexic" rel="stylesheet">
+
+    <style>
+        /* === VARIABLES CSS === */
+        :root {
+            --forest-green: #2E5D42;
+            --gold: #D4AF37;
+            --cream: #F8F5F0;
+            --light-cream: #FFF9F0;
+            --text-dark: #ffffff;
+            --text-light: #000000;
+            --border-color: #E0D8C8;
+            --bg-body: #FFF9F0;
+            --bg-section: #FFF9F0;
+            --header-bg: #2E5D42;
+            --text-color: #333333;
+            --card-bg: #FFFFFF;
+            --footer-bg: #2E5D42;
+            color-scheme: light;
+        }
+
+        /* === MODE SOMBRE (doit être après :root) === */
+        .dark-mode {
+            --bg-body: #1a1a1a;
+            --bg-section: #2d2d2d;
+            --header-bg: #1e3d2a;
+            --text-color: #ffffff;
+            --card-bg: #222;
+            --border-color: #444;
+            --footer-bg: #1e3d2a;
+        }
+
+        /* === STYLES GLOBAUX === */
+        body {
+            font-family: 'Lato', Arial, sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: all 0.4s ease;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-body);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            color: var(--forest-green);
+            margin-bottom: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* === HEADER === */
+        header {
+            background-color: var(--header-bg);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--forest-green);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--gold);
+        }
+
+        .cta-button {
+            background-color: var(--gold);
+            color: var(--forest-green);
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cta-button:hover {
+            background-color: white;
+            transform: translateY(-2px);
+        }
+
+        /* === ACCESSIBILITÉ === */
+        .accessibility-controls {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .dyslexia-button {
+            background-color: var(--forest-green);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dyslexia-button:hover {
+            background-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        .dyslexia-button.active {
+            background-color: var(--gold);
+            color: var(--forest-green);
+        }
+
+        /* === HERO === */
+        .hero {
+            background-color: var(--bg-body);
+            padding: 5rem 0;
+            text-align: center;
+            position: relative;
+            color: var(--text-color);
+        }
+
+        .hero-logo-left, .hero-logo-right {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background-color: var(--gold);
+            border-radius: 45%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--forest-green);
+            font-weight: bold;
+            font-size: 1.5rem;
+            z-index: 1;
+        }
+
+        .hero-logo-left {
+            left: 10px;
+        }
+
+        .hero-logo-right {
+            right: 10px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            color: var(--text-color);
+            margin-bottom: 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .secondary-button {
+            background-color: transparent;
+            color: var(--forest-green);
+            padding: 0.8rem 1.5rem;
+            border: 2px solid var(--forest-green);
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .secondary-button:hover {
+            background-color: var(--forest-green);
+            color: white;
+        }
+
+        /* === FONCTIONNALITÉS === */
+        .features {
+            background-color: var(--bg-section);
+            padding: 5rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2rem;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background-color: var(--gold);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background-color: var(--light-cream);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--forest-green);
+            font-size: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* === COMMENT ÇA MARCHE === */
+        .how-it-works {
+            padding: 5rem 0;
+            background-color: var(--bg-section);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background-color: var(--forest-green);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+        }
+
+        /* === TÉMOIGNAGES === */
+        .testimonials {
+            padding: 5rem 0;
+            background-color: var(--bg-section);
+            color: var(--text-color);
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .testimonial-content {
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+            color: var(--text-color);
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-color);
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--forest-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .author-info h4 {
+            margin: 0;
+            color: var(--forest-green);
+        }
+
+        .author-info p {
+            margin: 0;
+            color: var(--text-light);
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        /* === CTA === */
+        .cta-section {
+            padding: 5rem 0;
+            background-color: var(--forest-green);
+            color: white;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            opacity: 0.9;
+        }
+
+        /* === FOOTER === */
+        footer {
+            background-color: var(--footer-bg);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-column h3 {
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-column a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-column a:hover {
+            color: var(--gold);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        /* === OPEN DYSLEXIC === */
+        .opendyslexic {
+            font-family: 'OpenDyslexic', 'Open Sans', 'Lato', sans-serif !important;
+            line-height: 1.8;
+        }
+
+        /* === MODALS === */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #333;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--forest-green);
+        }
+
+        .modal-close {
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            nav ul {
+                gap: 1rem;
+            }
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            .section-title h2 {
+                font-size: 1.8rem;
+            }
+            .hero-logo-left, .hero-logo-right {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Charger OpenDyslexic -->
+    <script>
+        function loadOpenDyslexicFont() {
+            if (!document.getElementById('opendyslexic-font')) {
+                const link = document.createElement('link');
+                link.id = 'opendyslexic-font';
+                link.rel = 'stylesheet';
+                link.href = 'https://fonts.cdnfonts.com/css/open-dyslexic';
+                document.head.appendChild(link);
+            }
+        }
+        loadOpenDyslexicFont();
+    </script>
+
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="img/logo.png" class="logo-icon">
+                        <img src="img/logo.png" alt="Yggdrasil Logo" style="width: 60px; height: 60px;">
+                    </a>
+                    <div class="logo-text">Yggdrasil</div>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#features" data-i18n="nav.features">Fonctionnalités</a></li>
+                        <li><a href="#how-it-works" data-i18n="nav.how">Comment ça marche</a></li>
+                        <li><a href="#testimonials" data-i18n="nav.testimonials">Témoignages</a></li>
+                        <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
+                        <li><a href="register.php"data-i18n="hero.cta">S'inscrire gratuitement</a></li>
+                        <li><a href="login.php" data-i18n="connection.cta">Se connecter</a></li>
+                    </ul>
+                </nav>
+                <a href="#" id="lang-toggle" class="dyslexia-button" style="font-size: 0.9rem; padding: 0.6rem 1rem;">
+                    🌍 <span id="lang-text">FR → EN → BR</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contrôles d'accessibilité -->
+    <div class="container">
+        <div class="accessibility-controls">
+            <button id="dyslexia-toggle" class="dyslexia-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M4 4a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 4zm0 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5z"/>
+                    <path d="M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm13 2v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1z"/>
+                </svg>
+                <span data-i18n="access.dyslexia">Mode Dyslexie</span>
+            </button>
+            <button id="theme-toggle" class="dyslexia-button">
+                🌙 <span data-i18n="access.dark">Passer en mode sombre</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-logo-left"><img src="img/logo.png" alt="Logo" style="width: 60px; height: 60px;"></div>
+        <div class="hero-logo-right"><img src="img/logo.png" alt="Logo" style="width: 60px; height: 60px;"></div>
+        <div class="container">
+            <div class="hero-content">
+                <h1 data-i18n="hero.title">Découvrez Votre Héritage Familial</h1>
+                <p data-i18n="hero.subtitle">Plongez dans l'histoire de vos ancêtres avec Yggdrasil, la plateforme intuitive pour construire et explorer votre arbre généalogique.</p>
+                <div class="hero-buttons">
+                    <a href="register.php" class="cta-button" data-i18n="hero.cta">Commencez votre arbre</a>
+                    <a href="demo.html" class="secondary-button" data-i18n="hero.demo">Voir la démo</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fonctionnalités -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2 data-i18n="features.title">Fonctionnalités Clés</h2>
+                <p data-i18n="features.desc">Une solution complète pour préserver votre histoire familiale</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 data-i18n="feature.search">Recherche Avancée</h3>
+                    <p data-i18n="feature.search.desc">Trouvez facilement des membres de votre famille par nom, date ou lieu. La recherche instantanée vous permet de naviguer rapidement dans votre arbre généalogique.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌳</div>
+                    <h3 data-i18n="feature.tree">Arbre Interactif</h3>
+                    <p data-i18n="feature.tree.desc">Visualisez votre arbre généalogique de manière claire et intuitive. Ajoutez des membres, des photos et des informations avec une interface simple et moderne.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3 data-i18n="feature.collab">Collaboration</h3>
+                    <p data-i18n="feature.collab.desc">Partagez votre arbre avec vos proches et collaborez en temps réel. Invitez des membres de votre famille avec des droits de lecture ou d'édition.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖼️</div>
+                    <h3 data-i18n="feature.gallery">Galerie de Photos</h3>
+                    <p data-i18n="feature.gallery.desc">Enrichissez votre arbre avec des photos de famille. Ajoutez des légendes, des dates et organisez vos souvenirs pour chaque membre de votre famille.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3 data-i18n="feature.security">Sécurité RGPD</h3>
+                    <p data-i18n="feature.security.desc">Vos données sont protégées avec des mesures de sécurité avancées. Conformité totale au RGPD avec gestion complète de vos données personnelles.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3 data-i18n="feature.mobile">Accès Partout</h3>
+                    <p data-i18n="feature.mobile.desc">Utilisez Yggdrasil sur tous vos appareils. L'interface est optimisée pour mobile, tablette et ordinateur, avec synchronisation en temps réel.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comment ça marche -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-title">
+                <h2 data-i18n="how.title">Comment ça marche ?</h2>
+                <p data-i18n="how.desc">Trois étapes simples pour commencer votre voyage dans le passé</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3 data-i18n="step1.title">Créez Votre Compte</h3>
+                    <p data-i18n="step1.desc">Inscrivez-vous gratuitement en quelques secondes avec votre email. Vos données sont protégées par des mesures de sécurité avancées.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3 data-i18n="step2.title">Construisez Votre Arbre</h3>
+                    <p data-i18n="step2.desc">Ajoutez vos proches, photos et souvenirs grâce à une interface intuitive. L'arbre se construit automatiquement.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3 data-i18n="step3.title">Partagez et Collaborez</h3>
+                    <p data-i18n="step3.desc">Invitez vos proches à rejoindre votre arbre. Travaillez ensemble pour enrichir votre histoire familiale.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Témoignages -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-title">
+                <h2 data-i18n="testimonials.title">Ce que disent nos utilisateurs</h2>
+                <p data-i18n="testimonials.desc">Découvrez l'impact de Yggdrasil sur les familles</p>
+            </div>
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p data-i18n="testimonial.emilie">"Yggdrasil a transformé la façon dont je me connecte à mon passé. L'interface est si simple et agréable à utiliser ! J'ai découvert des ancêtres que je ne connaissais pas et pu partager cette découverte avec mes enfants."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">ÉL</div>
+                        <div class="author-info">
+                            <h4>Émilie Lefèvre</h4>
+                            <p data-i18n="testimonial.emilie.role">Utilisatrice depuis 1 an</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p data-i18n="testimonial.marc">"J'ai utilisé plusieurs plateformes de généalogie, mais Yggdrasil est de loin la plus intuitive. En une semaine, toute ma famille était connectée à notre arbre commun. Les photos et souvenirs partagés ont rapproché les générations."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">MD</div>
+                        <div class="author-info">
+                            <h4>Marc Dubois</h4>
+                            <p data-i18n="testimonial.marc.role">Famille Martin</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p data-i18n="testimonial.sophie">"En tant que membre d'une association généalogique, j'apprécie particulièrement la qualité des outils proposés. La recherche avancée, l'export des données et la collaboration en temps réel sont exactement ce dont nous avions besoin."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">SB</div>
+                        <div class="author-info">
+                            <h4>Sophie Bertrand</h4>
+                            <p data-i18n="testimonial.sophie.role">Association Généalogique</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 data-i18n="cta.title">Prêt à Découvrir Votre Histoire Familiale ?</h2>
+            <p data-i18n="cta.desc">Lancez-vous dès aujourd'hui et commencez à bâtir un héritage pour les générations à venir.</p>
+            <button class="cta-button" data-i18n="cta.button">Créer Votre Compte Gratuit →</button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3 data-i18n="footer.about">À propos</h3>
+                    <ul>
+                        <li><a href="#" onclick="openModal('about-modal')">Notre mission</a></li>
+                        <li><a href="#" onclick="openModal('team-modal')">Équipe</a></li>
+                        <li><a href="#" onclick="openModal('careers-modal')">Carrières</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3 data-i18n="footer.support">Support</h3>
+                    <ul>
+                        <li><a href="#" onclick="openModal('faq-modal')">Aide & FAQ</a></li>
+                        <li><a href="#" onclick="openModal('tutorials-modal')">Tutoriels</a></li>
+                        <li><a href="#" onclick="openModal('contact-modal')">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3 data-i18n="footer.legal">Légal</h3>
+                    <ul>
+                        <li><a href="#" onclick="openModal('terms-modal')">CGU</a></li>
+                        <li><a href="#" onclick="openModal('privacy-modal')">Confidentialité</a></li>
+                        <li><a href="#" onclick="openModal('gdpr-modal')">RGPD</a></li>
+                        <li><a href="#" onclick="openModal('legal-modal')">Mentions Légales</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3 data-i18n="footer.social">Réseaux sociaux</h3>
+                    <ul>
+                        <li><a href="https://facebook.com/yggdrasil" target="_blank">Facebook</a></li>
+                        <li><a href="https://twitter.com/yggdrasil" target="_blank">Twitter</a></li>
+                        <li><a href="https://instagram.com/yggdrasil" target="_blank">Instagram</a></li>
+                        <li><a href="https://youtube.com/yggdrasil" target="_blank">YouTube</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Yggdrasil. <span data-i18n="footer.allrights">Tous droits réservés.</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODALS LÉGAUX -->
+    <div id="terms-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" data-i18n="modal.terms_title">Conditions Générales d'Utilisation</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p data-i18n="modal.terms_p1">Bienvenue sur Yggdrasil. En utilisant notre service, vous acceptez ces conditions.</p>
+                <h3 data-i18n="modal.terms_1">1. Acceptation des conditions</h3>
+                <p data-i18n="modal.terms_1_desc">L'utilisation de Yggdrasil implique l'acceptation de ces conditions. Vous garantissez que les données saisies respectent la vie privée des personnes vivantes.</p>
+                <h3 data-i18n="modal.terms_2">2. Compte utilisateur</h3>
+                <p data-i18n="modal.terms_2_desc">Vous êtes responsable de la sécurité de votre mot de passe. Yggdrasil ne peut être tenu responsable des accès non autorisés dus à une mauvaise gestion du mot de passe.</p>
+                <h3 data-i18n="modal.terms_3">3. Données familiales</h3>
+                <p data-i18n="modal.terms_3_desc">Les données saisies restent la propriété de l'utilisateur. Yggdrasil s'engage à ne jamais vendre ni partager ces données avec des tiers.</p>
+                <h3 data-i18n="modal.terms_4">4. Abonnement (si premium)</h3>
+                <p data-i18n="modal.terms_4_desc">Un abonnement premium permet des fonctionnalités étendues (export PDF, historique complet, etc.). L'annulation se fait à tout moment.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="privacy-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" data-i18n="modal.privacy_title">Politique de Confidentialité</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p data-i18n="modal.privacy_p1">Nous respectons votre vie privée. Cette politique explique comment nous protégeons vos données.</p>
+                <h3 data-i18n="modal.privacy_1">1. Collecte des données</h3>
+                <p data-i18n="modal.privacy_1_desc">Nous collectons votre email, nom, pays et données nécessaires à la création de l'arbre. Aucune donnée sensible (religion, santé) n'est collectée.</p>
+                <h3 data-i18n="modal.privacy_2">2. Sécurité</h3>
+                <p data-i18n="modal.privacy_2_desc">Vos données sont chiffrées (SHA-256) et stockées sur des serveurs sécurisés en France, conformément au RGPD.</p>
+                <h3 data-i18n="modal.privacy_3">3. Partage</h3>
+                <p data-i18n="modal.privacy_3_desc">Aucune donnée n'est vendue. Le partage se fait uniquement avec les membres que vous invitez.</p>
+                <h3 data-i18n="modal.privacy_4">4. Vos droits</h3>
+                <p data-i18n="modal.privacy_4_desc">Vous avez le droit d'accéder, corriger, exporter ou supprimer vos données à tout moment depuis votre tableau de bord.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="gdpr-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Conformité RGPD</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Yggdrasil respecte pleinement le Règlement Général sur la Protection des Données (RGPD) de l'Union Européenne.</p>
+                <h3>1. Responsable du traitement</h3>
+                <p>Yggdrasil SAS – 123 Rue de la Généalogie, 29200 Brest, France</p>
+                <h3>2. Finalité du traitement</h3>
+                <p>Création et gestion d'arbres généalogiques, collaboration familiale.</p>
+                <h3>3. Vos droits (art. 15 à 22 RGPD)</h3>
+                <ul>
+                    <li>Accès à vos données</li>
+                    <li>Rectification des données inexactes</li>
+                    <li>Effacement ("droit à l'oubli")</li>
+                    <li>Portabilité des données (export)</li>
+                    <li>Opposition au traitement</li>
+                </ul>
+                <p>Pour exercer vos droits, contactez : <strong>dpo@yggdrasil.bzh</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="legal-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Mentions Légales</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>Éditeur du site</h3>
+                <p><strong>Yggdrasil SAS</strong><br>
+                SARL au capital de 50 000 €<br>
+                SIRET : 123 456 789 00012<br>
+                123 Rue de la Généalogie, 29200 Brest, France</p>
+                <h3>Hébergeur</h3>
+                <p><strong>OVH SAS</strong><br>
+                2 rue Kellermann, 59100 Roubaix, France</p>
+                <h3>Directeur de publication</h3>
+                <p>Marie Le Goff, Directrice Générale</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="contact-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Contact</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Pour toute question :</p>
+                <ul>
+                    <li>📧 <a href="mailto:support@yggdrasil.bzh">support@yggdrasil.bzh</a></li>
+                    <li>📞 02 98 00 00 00 (9h-18h, lun-vend)</li>
+                    <li>📍 123 Rue de la Généalogie, 29200 Brest</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        // === DICTIONNAIRE DE TRADUCTION ===
+        const translations = {
+            fr: {
+                'nav.features': 'Fonctionnalités',
+                'nav.how': 'Comment ça marche',
+                'nav.testimonials': 'Témoignages',
+                'nav.contact': 'Contact',
+                'hero.title': 'Découvrez Votre Héritage Familial',
+                'hero.subtitle': 'Plongez dans l\'histoire de vos ancêtres avec Yggdrasil, la plateforme intuitive pour construire et explorer votre arbre généalogique.',
+                'hero.cta': 'S\'inscrire gratuitement',
+                'hero.demo': 'Voir la démo',
+                'features.title': 'Fonctionnalités Clés',
+                'features.desc': 'Une solution complète pour préserver votre histoire familiale',
+                'feature.search': 'Recherche Avancée',
+                'feature.search.desc': 'Trouvez facilement des membres de votre famille par nom, date ou lieu. La recherche instantanée vous permet de naviguer rapidement dans votre arbre généalogique.',
+                'feature.tree': 'Arbre Interactif',
+                'feature.tree.desc': 'Visualisez votre arbre généalogique de manière claire et intuitive. Ajoutez des membres, des photos et des informations avec une interface simple et moderne.',
+                'feature.collab': 'Collaboration',
+                'feature.collab.desc': 'Partagez votre arbre avec vos proches et collaborez en temps réel. Invitez des membres de votre famille avec des droits de lecture ou d\'édition.',
+                'feature.gallery': 'Galerie de Photos',
+                'feature.gallery.desc': 'Enrichissez votre arbre avec des photos de famille. Ajoutez des légendes, des dates et organisez vos souvenirs pour chaque membre de votre famille.',
+                'feature.security': 'Sécurité RGPD',
+                'feature.security.desc': 'Vos données sont protégées avec des mesures de sécurité avancées. Conformité totale au RGPD avec gestion complète de vos données personnelles.',
+                'feature.mobile': 'Accès Partout',
+                'feature.mobile.desc': 'Utilisez Yggdrasil sur tous vos appareils. L\'interface est optimisée pour mobile, tablette et ordinateur, avec synchronisation en temps réel.',
+                'how.title': 'Comment ça marche ?',
+                'how.desc': 'Trois étapes simples pour commencer votre voyage dans le passé',
+                'step1.title': 'Créez Votre Compte',
+                'step1.desc': 'Inscrivez-vous gratuitement en quelques secondes avec votre email. Vos données sont protégées par des mesures de sécurité avancées.',
+                'step2.title': 'Construisez Votre Arbre',
+                'step2.desc': 'Ajoutez vos proches, photos et souvenirs grâce à une interface intuitive. L\'arbre se construit automatiquement.',
+                'step3.title': 'Partagez et Collaborez',
+                'step3.desc': 'Invitez vos proches à rejoindre votre arbre. Travaillez ensemble pour enrichir votre histoire familiale.',
+                'testimonials.title': 'Ce que disent nos utilisateurs',
+                'testimonials.desc': 'Découvrez l\'impact de Yggdrasil sur les familles',
+                'testimonial.emilie': '"Yggdrasil a transformé la façon dont je me connecte à mon passé. L\'interface est si simple et agréable à utiliser ! J\'ai découvert des ancêtres que je ne connaissais pas et pu partager cette découverte avec mes enfants."',
+                'testimonial.emilie.role': 'Utilisatrice depuis 1 an',
+                'testimonial.marc': '"J\'ai utilisé plusieurs plateformes de généalogie, mais Yggdrasil est de loin la plus intuitive. En une semaine, toute ma famille était connectée à notre arbre commun. Les photos et souvenirs partagés ont rapproché les générations."',
+                'testimonial.marc.role': 'Famille Martin',
+                'testimonial.sophie': '"En tant que membre d\'une association généalogique, j\'apprécie particulièrement la qualité des outils proposés. La recherche avancée, l\'export des données et la collaboration en temps réel sont exactement ce dont nous avions besoin."',
+                'testimonial.sophie.role': 'Association Généalogique',
+                'cta.title': 'Prêt à Découvrir Votre Histoire Familiale ?',
+                'cta.desc': 'Lancez-vous dès aujourd\'hui et commencez à bâtir un héritage pour les générations à venir.',
+                'cta.button': 'Créer Votre Compte Gratuit →',
+                'footer.about': 'À propos',
+                'footer.support': 'Support',
+                'footer.legal': 'Légal',
+                'footer.social': 'Réseaux sociaux',
+                'footer.allrights': 'Tous droits réservés.',
+                'access.dyslexia': 'Mode Dyslexie',
+                'access.dark': 'Passer en mode sombre'
+            },
+            en: {
+                'nav.features': 'Features',
+                'nav.how': 'How It Works',
+                'nav.testimonials': 'Testimonials',
+                'nav.contact': 'Contact',
+                'hero.title': 'Discover Your Family Heritage',
+                'hero.subtitle': 'Dive into your ancestor\'s history with Yggdrasil, the intuitive platform to build and explore your family tree.',
+                'hero.cta': 'Sign Up Free',
+                'hero.demo': 'See Demo',
+                'features.title': 'Key Features',
+                'features.desc': 'A complete solution to preserve your family history',
+                'feature.search': 'Advanced Search',
+                'feature.search.desc': 'Easily find family members by name, date, or location. Instant search helps you navigate your family tree quickly.',
+                'feature.tree': 'Interactive Tree',
+                'feature.tree.desc': 'Visualize your family tree clearly and intuitively. Add members, photos, and information with a simple, modern interface.',
+                'feature.collab': 'Collaboration',
+                'feature.collab.desc': 'Share your tree with relatives and collaborate in real time. Invite family members with read or edit permissions.',
+                'feature.gallery': 'Photo Gallery',
+                'feature.gallery.desc': 'Enrich your tree with family photos. Add captions, dates, and organize memories for each family member.',
+                'feature.security': 'GDPR Security',
+                'feature.security.desc': 'Your data is protected with advanced security measures. Fully GDPR-compliant with full control over your personal data.',
+                'feature.mobile': 'Access Anywhere',
+                'feature.mobile.desc': 'Use Yggdrasil on all your devices. The interface is optimized for mobile, tablet, and desktop, with real-time sync.',
+                'how.title': 'How It Works?',
+                'how.desc': 'Three simple steps to begin your journey into the past',
+                'step1.title': 'Create Your Account',
+                'step1.desc': 'Sign up in seconds with your email. Your data is protected with advanced security measures.',
+                'step2.title': 'Build Your Tree',
+                'step2.desc': 'Add relatives, photos, and memories using an intuitive interface. The tree builds itself automatically.',
+                'step3.title': 'Share & Collaborate',
+                'step3.desc': 'Invite your family to join your tree. Work together to enrich your family history.',
+                'testimonials.title': 'What Our Users Say',
+                'testimonials.desc': 'Discover the impact of Yggdrasil on families',
+                'testimonial.emilie': '"Yggdrasil transformed how I connect with my past. The interface is so simple and pleasant to use! I discovered ancestors I didn’t know about and shared this journey with my children."',
+                'testimonial.emilie.role': 'User for 1 year',
+                'testimonial.marc': '"I\'ve used several genealogy platforms, but Yggdrasil is by far the most intuitive. Within a week, my entire family was connected to our shared tree. Shared photos and memories brought generations closer."',
+                'testimonial.marc.role': 'Martin Family',
+                'testimonial.sophie': '"As a member of a genealogical association, I appreciate the quality of the tools offered. Advanced search, data export, and real-time collaboration are exactly what we needed."',
+                'testimonial.sophie.role': 'Genealogical Association',
+                'cta.title': 'Ready to Discover Your Family Story?',
+                'cta.desc': 'Get started today and begin building a legacy for future generations.',
+                'cta.button': 'Create Your Free Account →',
+                'footer.about': 'About',
+                'footer.support': 'Support',
+                'footer.legal': 'Legal',
+                'footer.social': 'Social Media',
+                'footer.allrights': 'All rights reserved.',
+                'access.dyslexia': 'Dyslexia Mode',
+                'access.dark': 'Switch to Dark Mode'
+            },
+            br: {
+                'nav.features': 'Perakroù',
+                'nav.how': 'Petra eo',
+                'nav.testimonials': 'Temoignages',
+                'nav.contact': 'Darempred',
+                'hero.title': 'Diskouezit Ho Trenezhen Teul',
+                'hero.subtitle': 'Adkemerit istor ho zudeni ha seveni gant Yggdrasil, al lec\'hiadur skaragadus evit sevel ha skoazellañ ho kernezenn genealogel.',
+                'hero.cta': 'Izili a-bell',
+                'hero.demo': 'Gwelet ar demo',
+                'features.title': 'Perakroù Bravañ',
+                'features.desc': 'Un toullad klok evit enrollañ ho istor teul',
+                'feature.search': 'Klask Advantek',
+                'feature.search.desc': 'Kavet a raist mat ar membroù eus ho teuli war an anv, an deiz pe ar barrez. Klask er benn-klok evit skoazell ho kernezenn genealogel.',
+                'feature.tree': 'Kernezenn Skaragadus',
+                'feature.tree.desc': 'Gwelet ho kernezenn genealogel a-blaen da gouel hag a-blaen da gompren. Ouzhpennit tud, skeudennoù ha titouroù gant ur mutuad skaragadus hag oioù.',
+                'feature.collab': 'Kendeuz',
+                'feature.collab.desc': 'Rannañ ho kernezenn gant ho karantez ha kendeuzit war-dro. Kerkent ar membroù eus ho teuli gant gwir resev pe modifikadur.',
+                'feature.gallery': 'Kened',
+                'feature.gallery.desc': 'Pennañ ho kernezenn gant skeudennoù teul. Ouzhpennit diskribladoù, deizioù ha renklet ho souvenezioù evit pep hini.',
+                'feature.security': 'Surenti GDPR',
+                'feature.security.desc': 'Ho titouroù a zo surentet gant desveriùri surenti. Gouestizhiet GDPR gant gouvernetenn klok eus ho titouroù personel.',
+                'feature.mobile': 'Mont da Vle',
+                'feature.mobile.desc': 'Implijit Yggdrasil war pep hiniad. Al linenn a zo dibabet evit mobili, tablet, hag urzhiataer, gant sinkronelaat war-dro.',
+                'how.title': 'Petra eo ?', 
+                'how.desc': 'Tri lec\'hiad skorri evit kregiñ ho sevenadur en dremen',
+                'step1.title': 'Krouit Ho Kont',
+                'step1.desc': 'Iziliit a-bell e segondennoù gant ho chomlec\'h. Ho titouroù a zo surentet gant desveriùri surenti.',
+                'step2.title': 'Sevelit Ho Kernezenn',
+                'step2.desc': 'Ouzhpennit ho karantez, skeudennoù ha souvenezioù gant ur mutuad skaragadus. Kernezenn a sevel war-dro.',
+                'step3.title': 'Rannañ ha Kendeuz',
+                'step3.desc': 'Kerkent ho karantez da jediñ ho kernezenn. Labourit kempen evit pennañ ho istor teul.',
+                'testimonials.title': 'Petra a ra arveriad',
+                'testimonials.desc': 'Diskouezit implij Yggdrasil war ar vugale',
+                'testimonial.emilie': '"Yggdrasil a cheñchet penaos em eus kevreañ gant ma dremen. Al linenn a zo skaragadus ha plegr! Ouzhpennin a raist tud a n\'oua ket goulennet ha rannet gant ma vugale."',
+                'testimonial.emilie.role': 'Arveriad eus 1 bloaz',
+                'testimonial.marc': '"Implijet a raist me plussaouar lec\'hiadur genealogel, met Yggdrasil a zo al lec\'hiadur skaragadus. En ur sizhun, ho teuli a zo kevreet d\'ar gernezenn. Skeudennoù ha souvenezioù rannet a zo betunet ar genadurioù."',
+                'testimonial.marc.role': 'Teuli Martin',
+                'testimonial.sophie': '"Evel membroù un asosad genealogel, graet a ra ganeon kalite al perakroù. Klask advantek, ezporzh titouroù ha kendeuz war-dro a zo petra o vefe ret deomp."',
+                'testimonial.sophie.role': 'Asosad Genealogel',
+                'cta.title': 'Gourc\'hemennek evit diskouezit ho istor teul ?',
+                'cta.desc': 'Kregiñ hoiñ evit sevel ur trenezhen evit ar genadurioù a zisk.',
+                'cta.button': 'Krouiñ Ho Kont Amankavel →',
+                'footer.about': 'A-zivout',
+                'footer.support': 'Skor',
+                'footer.legal': 'Lezenn',
+                'footer.social': 'Kenurzhiaou',
+                'footer.allrights': 'An holl gwirioù rezervet.',
+                'access.dyslexia': 'Mod Dyslexie',
+                'access.dark': 'Trec\'h da gouloù tiñj'
+            }
+        };
+
+        // Liste des langues
+        const languages = ['fr', 'en', 'br'];
+        const langNames = {
+            fr: 'FR → EN → BR',
+            en: 'EN → BR → FR',
+            br: 'BR → FR → EN'
+        };
+
+        // Appliquer la traduction
+        function setLanguage(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.setAttribute('placeholder', translations[lang][key]);
+                    } else {
+                        el.textContent = translations[lang][key];
+                    }
+                }
+            });
+            document.getElementById('lang-text').textContent = langNames[lang];
+            document.documentElement.lang = lang;
+            localStorage.setItem('language', lang);
+        }
+
+        // Charger au démarrage
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedLang = localStorage.getItem('language');
+            const initialLang = languages.includes(savedLang) ? savedLang : 'fr';
+            setLanguage(initialLang);
+
+            // Bascule langue
+            document.getElementById('lang-toggle').addEventListener('click', function () {
+                const currentLang = localStorage.getItem('language') || 'fr';
+                const currentIndex = languages.indexOf(currentLang);
+                const nextLang = languages[(currentIndex + 1) % languages.length];
+                setLanguage(nextLang);
+            });
+
+            // === MODE DYSLEXIE ===
+            const dyslexiaToggle = document.getElementById('dyslexia-toggle');
+            const body = document.body;
+            const savedDyslexia = localStorage.getItem('dyslexiaMode') === 'true';
+
+            if (savedDyslexia) {
+                body.classList.add('opendyslexic');
+            }
+
+            function updateDyslexiaButton() {
+                const lang = localStorage.getItem('language') || 'fr';
+                const text = body.classList.contains('opendyslexic')
+                    ? translations[lang]['access.dyslexia'] + ' (activé)'
+                    : translations[lang]['access.dyslexia'];
+                dyslexiaToggle.classList.toggle('active', body.classList.contains('opendyslexic'));
+                dyslexiaToggle.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M4 4a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 4zm0 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5z"/>
+                        <path d="M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm13 2v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1z"/>
+                    </svg>
+                    <span>${text}</span>
+                `;
+            }
+
+            dyslexiaToggle.addEventListener('click', () => {
+                body.classList.toggle('opendyslexic');
+                localStorage.setItem('dyslexiaMode', body.classList.contains('opendyslexic') ? 'true' : 'false');
+                updateDyslexiaButton();
+            });
+
+            updateDyslexiaButton();
+
+            // === MODE SOMBRE ===
+            const themeToggle = document.getElementById('theme-toggle');
+            const savedTheme = localStorage.getItem('theme') || 'light';
+
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+            }
+
+            function updateThemeButton() {
+                const lang = localStorage.getItem('language') || 'fr';
+                const isDark = body.classList.contains('dark-mode');
+                const text = isDark 
+                    ? translations[lang]['access.dark'].replace('sombre', 'clair').replace('Dark', 'Light') 
+                    : translations[lang]['access.dark'];
+                themeToggle.innerHTML = (isDark ? '☀️ ' : '🌙 ') + `<span data-i18n="access.dark">${text}</span>`;
+            }
+
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+                updateThemeButton();
+            });
+
+            updateThemeButton();
+        });
+
+        // === FONCTIONS MODALS ===
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        // Fermer les modals
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modal = this.closest('.modal');
+                if (modal) modal.style.display = 'none';
+            });
+        });
+
+        // Fermer en cliquant en dehors
+        window.addEventListener('click', function(e) {
+            document.querySelectorAll('.modal').forEach(modal => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

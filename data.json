@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    { "id": "vous", "name": "Vous", "image": "images/vous.jpg", "details": "Date de naissance: 1990" },
+    { "id": "mere", "name": "Mère", "image": "images/mere.jpg", "details": "Date de naissance: 1965" },
+    { "id": "pere", "name": "Père", "image": "images/pere.jpg", "details": "Date de naissance: 1963" },
+    { "id": "grand-mere", "name": "Grand-mère", "image": "images/grand-mere.jpg", "details": "Date de naissance: 1940" },
+    { "id": "grand-pere", "name": "Grand-père", "image": "images/grand-pere.jpg", "details": "Date de naissance: 1938" },
+    { "id": "tante-sophie", "name": "Tante Sophie", "image": "images/tante-sophie.jpg", "details": "Date de naissance: 1967" },
+    { "id": "oncle-marc", "name": "Oncle Marc", "image": "images/oncle-marc.jpg", "details": "Date de naissance: 1969" }
+  ],
+  "links": [
+    { "source": "vous", "target": "mere" },
+    { "source": "vous", "target": "pere" },
+    { "source": "mere", "target": "grand-mere" },
+    { "source": "mere", "target": "grand-pere" },
+    { "source": "pere", "target": "tante-sophie" },
+    { "source": "pere", "target": "oncle-marc" }
+  ]
+}
