@@ -39,7 +39,7 @@
             text-align: center;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .header::before {
@@ -53,6 +53,42 @@
             animation: rotate 20s linear infinite;
         }
 
+        .navbar {
+            text-align: center;
+            padding: 0.75rem 0;
+            background: rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .navbar a:hover {
+            opacity: 0.85;
+        }
+
+        .home-link {
+            background: linear-gradient(135deg, var(--forest-green), #1a4d32);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(46, 93, 66, 0.3);
+}
+
+.home-link:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+
         @keyframes rotate {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -63,7 +99,7 @@
             z-index: 2;
         }
 
-        .logo{
+        .logo {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -127,6 +163,7 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.1);
             overflow: hidden;
             position: relative;
+            margin-top: 20px
         }
 
         .tree-container::before {
@@ -163,12 +200,12 @@
 
         .node-name {
             fill: white;
-    stroke: black;
-    stroke-width: 2px;
-    paint-order: stroke fill; /* Très important : dessine d'abord le contour, puis le remplissage */
-    font-size: 14px;
-    font-weight: bold;
-    text-anchor: middle;
+            stroke: black;
+            stroke-width: 2px;
+            paint-order: stroke fill;
+            font-size: 14px;
+            font-weight: bold;
+            text-anchor: middle;
         }
 
         .node-dates {
@@ -330,14 +367,18 @@
         <div class="header-content">
             <div class="logo">
                 <a href="img/logo.png" target="_blank">
-                    <img src="img/logo.png" alt="Yggdrasil Logo" style="width: 60px; height: auto;"></a>
-            <div class="logo-text">Yggdrasil</div>
+                    <img src="img/logo.png" alt="Yggdrasil Logo" style="width: 60px; height: auto;">
+                </a>
+                <div class="logo-text">Yggdrasil</div>
             </div>
             <p class="subtitle">Arbre Généalogique Interactif</p>
         </div>
     </div>
 
     <div class="container">
+        <nav class="navbar">
+            <a href="./index.html" class="control-button">🏠 Accueil</a>
+        </nav>
         <div class="controls fade-in">
             <button class="control-button" onclick="expandAll()">
                 🔍 Développer tout
@@ -347,6 +388,9 @@
             </button>
             <button class="control-button" onclick="centerTree()">
                 🎯 Centrer
+            </button>
+            <button class="control-button" onclick="resetView()">
+                🔄 Réinitialiser vue
             </button>
             <button class="control-button" onclick="randomizeColors()">
                 🎨 Couleurs aléatoires
@@ -465,24 +509,29 @@
 
         // Couleurs selon le genre
         const colors = {
-            M: "#2E5D42",  // Vert forêt pour les hommes
-            F: "#8B4B85",  // Violet pour les femmes
-            child: "#D4AF37" // Doré pour les enfants
+            M: "#2E5D42",
+            F: "#8B4B85",
+            child: "#D4AF37"
         };
 
         function getPersonColor(d) {
-            if (d.data.birth && new Date().getFullYear() - parseInt(d.data.birth) < 18) {
+            const birthYear = parseInt(d.data.birth);
+            if (d.data.birth && !isNaN(birthYear) && (new Date().getFullYear() - birthYear < 18)) {
                 return colors.child;
             }
             return colors[d.data.gender] || "#666";
         }
 
-        // Hiérarchie des données
-        let root = d3.hierarchy(familyData, d => d.children);
-        root.x0 = height / 2;
-        root.y0 = 0;
+        // Fonction pour calculer l'âge
+        function getAge(person) {
+            const birth = parseInt(person.birth);
+            if (isNaN(birth)) return '?';
+            const death = person.death ? parseInt(person.death) : null;
+            const currentYear = new Date().getFullYear();
+            return death ? death - birth : currentYear - birth;
+        }
 
-        // Fonction pour calculer les statistiques
+        // Calcul des statistiques
         function updateStats() {
             let totalMembers = 0;
             let livingMembers = 0;
@@ -492,29 +541,25 @@
                 totalMembers++;
                 if (!node.data.death) livingMembers++;
                 maxDepth = Math.max(maxDepth, depth);
-                
                 if (node.data.children) {
-                    node.data.children.forEach(child => traverse({data: child}, depth + 1));
+                    node.data.children.forEach(child => traverse({ data: child }, depth + 1));
                 }
             }
 
-            traverse(root);
-
+            traverse({ data: familyData });
             document.getElementById('total-members').textContent = totalMembers;
             document.getElementById('generations').textContent = maxDepth + 1;
             document.getElementById('living-members').textContent = livingMembers;
         }
 
-        // Fonction de mise à jour de l'arbre
+        // Mise à jour de l'arbre
         function update(source) {
             const treeData = tree(root);
             const nodes = treeData.descendants();
             const links = treeData.descendants().slice(1);
 
-            // Normaliser pour une disposition fixe
             nodes.forEach(d => d.y = d.depth * 200);
 
-            // Nœuds
             const node = g.selectAll('g.node')
                 .data(nodes, d => d.id || (d.id = ++i));
 
@@ -525,7 +570,6 @@
                 .on('mouseover', showTooltip)
                 .on('mouseout', hideTooltip);
 
-            // Cercles pour les nœuds
             nodeEnter.append('circle')
                 .attr('class', 'node-circle')
                 .attr('r', 1e-6)
@@ -533,13 +577,11 @@
                 .style("stroke", "#fff")
                 .style("stroke-width", "3px");
 
-            // Texte pour les noms
             nodeEnter.append('text')
                 .attr('class', 'node-text node-name')
                 .attr("dy", "-0.2em")
                 .text(d => d.data.name.split(' ').slice(0, 2).join(' '));
 
-            // Texte pour les dates
             nodeEnter.append('text')
                 .attr('class', 'node-text node-dates')
                 .attr("dy", "1.2em")
@@ -549,7 +591,6 @@
                     return death ? `${birth} - ${death}` : `${birth} -`;
                 });
 
-            // Transition pour les nouveaux nœuds
             const nodeUpdate = nodeEnter.merge(node);
 
             nodeUpdate.transition()
@@ -562,17 +603,12 @@
                 .attr('r', 30)
                 .style("fill", d => getPersonColor(d));
 
-            // Suppression des nœuds
             const nodeExit = node.exit().transition()
                 .duration(duration)
                 .attr("transform", d => `translate(${source.y},${source.x})`)
                 .remove();
 
-            nodeExit.select('circle')
-                .attr('r', 1e-6);
-
-            nodeExit.select('text')
-                .style('fill-opacity', 1e-6);
+            nodeExit.select('circle').attr('r', 1e-6);
 
             // Liens
             const link = g.selectAll('path.link')
@@ -580,10 +616,7 @@
 
             const linkEnter = link.enter().insert('path', "g")
                 .attr("class", "link")
-                .attr('d', d => {
-                    const o = {x: source.x0, y: source.y0};
-                    return diagonal(o, o);
-                });
+                .attr('d', d => diagonal({x: source.x0, y: source.y0}, {x: source.x0, y: source.y0}));
 
             const linkUpdate = linkEnter.merge(link);
 
@@ -591,31 +624,24 @@
                 .duration(duration)
                 .attr('d', d => diagonal(d, d.parent));
 
-            const linkExit = link.exit().transition()
+            link.exit().transition()
                 .duration(duration)
-                .attr('d', d => {
-                    const o = {x: source.x, y: source.y};
-                    return diagonal(o, o);
-                })
+                .attr('d', d => diagonal({x: source.x, y: source.y}, {x: source.x, y: source.y}))
                 .remove();
 
-            // Stocker les anciennes positions
             nodes.forEach(d => {
                 d.x0 = d.x;
                 d.y0 = d.y;
             });
         }
 
-        // Fonction pour créer des chemins diagonaux
         function diagonal(s, d) {
-            const path = `M ${s.y} ${s.x}
+            return `M ${s.y} ${s.x}
                     C ${(s.y + d.y) / 2} ${s.x},
                       ${(s.y + d.y) / 2} ${d.x},
                       ${d.y} ${d.x}`;
-            return path;
         }
 
-        // Fonction de clic sur un nœud
         function click(event, d) {
             if (d.children) {
                 d._children = d.children;
@@ -627,15 +653,11 @@
             update(d);
         }
 
-        // Tooltip
         function showTooltip(event, d) {
             const tooltip = document.getElementById('tooltip');
             const person = d.data;
-            
-            const age = person.death ? 
-                parseInt(person.death) - parseInt(person.birth) : 
-                new Date().getFullYear() - parseInt(person.birth);
-                
+            const age = getAge(person);
+
             tooltip.innerHTML = `
                 <h3>${person.name}</h3>
                 <p><strong>Âge:</strong> ${age} ans</p>
@@ -643,7 +665,7 @@
                 ${person.location ? `<p><strong>Lieu:</strong> ${person.location}</p>` : ''}
                 ${person.spouse ? `<p><strong>Conjoint:</strong> ${person.spouse}</p>` : ''}
             `;
-            
+
             tooltip.style.left = (event.pageX + 10) + 'px';
             tooltip.style.top = (event.pageY - 10) + 'px';
             tooltip.style.opacity = '1';
@@ -653,16 +675,14 @@
             document.getElementById('tooltip').style.opacity = '0';
         }
 
-        // Fonctions de contrôle
+        // Contrôles
         function expandAll() {
             function expand(d) {
                 if (d._children) {
                     d.children = d._children;
                     d._children = null;
                 }
-                if (d.children) {
-                    d.children.forEach(expand);
-                }
+                if (d.children) d.children.forEach(expand);
             }
             expand(root);
             update(root);
@@ -676,31 +696,35 @@
                     d._children.forEach(collapse);
                 }
             }
-            root.children.forEach(collapse);
+            if (root.children) {
+                root.children.forEach(collapse);
+            }
             update(root);
         }
 
         function centerTree() {
             const bounds = g.node().getBBox();
-            const parent = g.node().parentElement;
-            const fullWidth = parent.clientWidth || parent.parentNode.clientWidth;
-            const fullHeight = parent.clientHeight || parent.parentNode.clientHeight;
-            const width = bounds.width;
-            const height = bounds.height;
-            const midX = bounds.x + width / 2;
-            const midY = bounds.y + height / 2;
-            
-            const scale = 0.8 / Math.max(width / fullWidth, height / fullHeight);
+            const parent = svg.node().parentElement;
+            const fullWidth = parent.clientWidth;
+            const fullHeight = parent.clientHeight;
+            const midX = bounds.x + bounds.width / 2;
+            const midY = bounds.y + bounds.height / 2;
+            const scale = 0.8 / Math.max(bounds.width / fullWidth, bounds.height / fullHeight);
             const translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
-            
+
             svg.transition()
                 .duration(750)
-                .call(d3.zoom().transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+                .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+        }
+
+        function resetView() {
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity);
         }
 
         function randomizeColors() {
             const randomColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
-            
             g.selectAll('.node-circle')
                 .transition()
                 .duration(500)
@@ -721,27 +745,23 @@
         svg.call(zoom);
 
         // Initialisation
-        root.children.forEach(collapse);
+        let root = d3.hierarchy(familyData, d => d.children);
+        root.x0 = height / 2;
+        root.y0 = 0;
+
+        // Réduire tous les enfants au départ
+        if (root.children) {
+            root.children.forEach(collapseAll);
+        }
+
         update(root);
         updateStats();
 
-        // Animation d'entrée
-        setTimeout(() => {
-            expandAll();
-        }, 1000);
-
-        function collapse(d) {
-            if (d.children) {
-                d._children = d.children;
-                d.children = null;
-            }
-        }
-
-        // Effet de parallaxe sur scroll
+        // Effet de parallaxe
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
             const parallax = document.querySelector('.header');
-            const speed = 0.5;
+            const speed = 0.3;
             parallax.style.transform = `translateY(${scrolled * speed}px)`;
         });
     </script>
