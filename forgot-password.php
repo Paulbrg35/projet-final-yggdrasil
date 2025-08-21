@@ -1,32 +1,10 @@
 <?php
 session_start();
+// Autoriser l'inclusion de config.php
 define('YGGDRASIL_CONFIG', true);
 require_once 'config.php';
-/** @var PDO $pdo */
-$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
 
-// === FONCTIONS UTILITAIRES (doivent être déclarées en haut) ===
-
-/**
- * Fonction pour obtenir l'IP réelle du client
- */
-function getRealIP() {
-    $headers = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP'];
-    foreach ($headers as $header) {
-        if (!empty($_SERVER[$header])) {
-            $ips = explode(',', $_SERVER[$header]);
-            $ip = trim($ips[0]);
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                return $ip;
-            }
-        }
-    }
-    return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-}
-
-/**
- * Fonction pour générer un token CSRF
- */
+// Générer un token CSRF
 function generateCSRFToken() {
     if (!isset($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -34,229 +12,593 @@ function generateCSRFToken() {
     return $_SESSION['csrf_token'];
 }
 
-/**
- * Fonction pour valider le token CSRF
- */
-function validateCSRFToken($token) {
-    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
-}
+$csrf_token = generateCSRFToken();
+?>
 
-// === TRAITEMENT DU FORMULAIRE (si POST) ===
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $errors = [];
-    $ip = getRealIP(); // ✅ Maintenant autorisé
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mot de passe oublié - Yggdrasil</title>
 
-    try {
-        // Validation CSRF
-        $csrf_token = $_POST['csrf_token'] ?? '';
-        if (!validateCSRFToken($csrf_token)) {
-            error_log("Tentative CSRF détectée depuis $ip");
-            throw new Exception('Token de sécurité invalide');
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- OpenDyslexic -->
+    <link href="https://fonts.cdnfonts.com/css/open-dyslexic" rel="stylesheet">
+
+    <style>
+        :root {
+            --forest-green: #2E5D42;
+            --gold: #D4AF37;
+            --cream: #F8F5F0;
+            --light-cream: #FFF9F0;
+            --text-dark: #333;
+            --text-light: #666;
+            --border-color: #E0D8C8;
+            --bg-body: #FFF9F0;
+            --bg-section: #FFF9F0;
+            --header-bg: #2E5D42;
+            --text-color: #333333;
+            --card-bg: #FFFFFF;
+            --footer-bg: #2E5D42;
+            --shadow: 0 5px 15px rgba(0,0,0,0.1);
+            color-scheme: light;
         }
 
-        // Rate limiting global par IP (max 5 tentatives par heure)
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*) FROM password_resets 
-            WHERE ip_address = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-        ");
-        $stmt->execute([$ip]);
-        $ip_attempts = $stmt->fetchColumn();
-
-        if ($ip_attempts >= 5) {
-            error_log("Rate limit IP dépassé pour $ip ($ip_attempts tentatives)");
-            throw new Exception('Trop de tentatives depuis cette adresse IP. Veuillez attendre une heure.');
+        .dark-mode {
+            --bg-body: #1a1a1a;
+            --bg-section: #2d2d2d;
+            --header-bg: #1e3d2a;
+            --text-color: #ffffff;
+            --card-bg: #222;
+            --border-color: #444;
+            --footer-bg: #1e3d2a;
+            --shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
-        // Validation email
-        $email = trim($_POST['email'] ?? '');
-        if (empty($email)) {
-            $errors[] = "L'adresse email est requise.";
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = "Le format de l'adresse email est invalide.";
-        } elseif (strlen($email) > 254) {
-            $errors[] = "L'adresse email est trop longue.";
+        body {
+            font-family: 'Lato', Arial, sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            transition: all 0.4s ease;
         }
 
-        if (!empty($errors)) {
-            throw new Exception('Données invalides');
+        h1, h2, h3 {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            color: var(--forest-green);
         }
 
-        // Rate limiting par email (max 3 tentatives par 15 minutes)
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*) FROM password_resets 
-            WHERE email = ? AND created_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)
-        ");
-        $stmt->execute([$email]);
-        $email_attempts = $stmt->fetchColumn();
-
-        if ($email_attempts >= 3) {
-            error_log("Rate limit email dépassé pour $email depuis $ip");
-            usleep(rand(500000, 1000000));
-            throw new Exception('Trop de tentatives pour cette adresse email. Veuillez attendre 15 minutes.');
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
 
-        // Nettoyer les tokens expirés
-        try {
-            $stmt = $pdo->prepare("DELETE FROM password_resets WHERE expires_at < NOW()");
-            $stmt->execute();
-        } catch (Exception $e) {
-            error_log("Erreur nettoyage tokens : " . $e->getMessage());
+        /* Header */
+        header {
+            background-color: var(--header-bg);
+            color: white;
+            padding: 1rem 0;
         }
 
-        // Vérifier si l'utilisateur existe
-        $stmt = $pdo->prepare("SELECT id, nom, email FROM users WHERE email = ? AND active = 1");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
-
-        // Message de succès standardisé pour éviter l'énumération
-        $success_message = "Si cette adresse email est enregistrée et active, vous recevrez un lien de réinitialisation dans quelques instants.";
-
-        // Enregistrer la tentative même si l'utilisateur n'existe pas
-        $user_id = $user ? $user['id'] : null;
-        
-        try {
-            $stmt = $pdo->prepare("
-                INSERT INTO password_resets (user_id, email, token, expires_at, created_at, ip_address, user_agent)
-                VALUES (?, ?, ?, ?, NOW(), ?, ?)
-            ");
-            
-            $token = bin2hex(random_bytes(32));
-            $expires_at = date('Y-m-d H:i:s', strtotime('+1 hour'));
-            $user_agent = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255);
-            
-            $stmt->execute([$user_id, $email, $token, $expires_at, $ip, $user_agent]);
-        } catch (Exception $e) {
-            error_log("Erreur enregistrement tentative : " . $e->getMessage());
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        // Si l'utilisateur n'existe pas
-        if (!$user) {
-            usleep(rand(500000, 1500000));
-            $_SESSION['reset_success'] = $success_message;
-        } else {
-            // Commencer une transaction
-            $pdo->beginTransaction();
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-            try {
-                // Supprimer les anciens tokens
-                $stmt = $pdo->prepare("DELETE FROM password_resets WHERE email = ? AND user_id IS NOT NULL");
-                $stmt->execute([$email]);
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--forest-green);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
 
-                // Générer un nouveau token
-                $new_token = bin2hex(random_bytes(32));
-                $expires_at = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        .logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
 
-                // Insérer le nouveau token
-                $stmt = $pdo->prepare("
-                    INSERT INTO password_resets (user_id, email, token, expires_at, created_at, ip_address, user_agent)
-                    VALUES (?, ?, ?, ?, NOW(), ?, ?)
-                ");
-                $stmt->execute([$user['id'], $email, $new_token, $expires_at, $ip, $user_agent]);
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+        }
 
-                $pdo->commit();
+        /* Accessibility Controls */
+        .accessibility-controls {
+            display: flex;
+            justify-content: center;
+            margin: 1.5rem 0;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
 
-                // Créer le lien
-                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                $host = $_SERVER['HTTP_HOST'];
-                $path = rtrim(dirname($_SERVER['PHP_SELF']), '/');
-                $reset_link = "$protocol://$host$path/reset-password.php?token=" . urlencode($new_token);
+        .dyslexia-button {
+            background-color: var(--forest-green);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-                // Préparer l'email
-                $subject = "Réinitialisation de votre mot de passe - Yggdrasil";
-                $user_name = htmlspecialchars($user['nom'] ?? 'Membre', ENT_QUOTES, 'UTF-8');
+        .dyslexia-button:hover {
+            background-color: var(--gold);
+            transform: translateY(-2px);
+        }
 
-                $message = "
-                <!DOCTYPE html>
-                <html lang='fr'>
-                <head>
-                    <meta charset='UTF-8'>
-                    <title>Réinitialisation</title>
-                    <style>
-                        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
-                        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
-                        .header { background: #2E5D42; color: white; padding: 20px; text-align: center; }
-                        .button { display: inline-block; background: #D4AF37; color: #2E5D42; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-                        .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 0.9em; }
-                    </style>
-                </head>
-                <body>
-                    <div class='container'>
-                        <div class='header'><h1>Yggdrasil</h1></div>
-                        <h2>Réinitialisation de mot de passe</h2>
-                        <p>Bonjour <strong>$user_name</strong>,</p>
-                        <p>Cliquez sur le bouton ci-dessous pour réinitialiser votre mot de passe :</p>
-                        <p style='text-align: center;'>
-                            <a href='$reset_link' class='button'>Réinitialiser</a>
-                        </p>
-                        <p><strong>⏰ Ce lien expire dans 1 heure.</strong></p>
-                    </div>
-                    <div class='footer'>
-                        <p>Cet email a été envoyé automatiquement.</p>
-                    </div>
-                </body>
-                </html>";
+        .dyslexia-button.active {
+            background-color: var(--gold);
+            color: var(--forest-green);
+        }
 
-                $headers = [
-                    'MIME-Version: 1.0',
-                    'Content-Type: text/html; charset=UTF-8',
-                    'From: Yggdrasil <noreply@yggdrasil.bzh>',
-                    'Reply-To: support@yggdrasil.bzh'
-                ];
+        /* Language Toggle Button */
+        #lang-toggle {
+            background-color: var(--forest-green);
+            color: white;
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
 
-                $mail_sent = mail($email, $subject, $message, implode("\r\n", $headers));
+        /* Forgot Password Section */
+        .forgot-password-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 2rem 0;
+        }
 
-                if ($mail_sent) {
-                    $_SESSION['reset_success'] = $success_message;
-                    error_log("Email envoyé à $email depuis $ip");
-                } else {
-                    error_log("Échec envoi email à $email depuis $ip");
-                    $_SESSION['reset_success'] = $success_message;
-                }
+        .forgot-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem;
+            text-align: center;
+        }
 
-            } catch (Exception $e) {
-                if (isset($pdo) && $pdo->inTransaction()) $pdo->rollback();
-                throw $e;
+        .forgot-card h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--forest-green);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-family: 'Lato', sans-serif;
+            font-size: 1rem;
+            background-color: var(--bg-body);
+            color: var(--text-color);
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 0.8rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 0.8rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .cta-button {
+            background-color: var(--gold);
+            color: var(--forest-green);
+            padding: 0.9rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1rem;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cta-button:hover {
+            background-color: white;
+            color: var(--forest-green);
+            transform: translateY(-2px);
+        }
+
+        .login-link {
+            margin-top: 1.5rem;
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        .login-link a {
+            color: var(--forest-green);
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--footer-bg);
+            color: white;
+            padding: 2rem 0;
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            nav {
+                margin-top: 0.5rem;
+            }
+            .forgot-card {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            .accessibility-controls {
+                flex-direction: column;
+                align-items: center;
             }
         }
 
-    } catch (PDOException $e) {
-        if (isset($pdo) && $pdo->inTransaction()) $pdo->rollback();
-        error_log("Erreur DB : " . $e->getMessage() . " - IP: $ip");
-        $errors[] = "Erreur temporaire. Veuillez réessayer.";
-        
-    } catch (Exception $e) {
-        if (isset($pdo) && $pdo->inTransaction()) $pdo->rollback();
-        
-        $error_msg = $e->getMessage();
-        error_log("Erreur : $error_msg - IP: $ip - Email: " . ($email ?? 'non défini'));
-        
-        switch ($error_msg) {
-            case 'Données invalides':
-                break;
-            case 'Token de sécurité invalide':
-                $errors[] = "Session expirée. Veuillez recharger la page.";
-                break;
-            case (strpos($error_msg, 'Trop de tentatives') === 0):
-                $errors[] = $error_msg;
-                break;
-            default:
-                $errors[] = "Une erreur est survenue. Veuillez réessayer.";
+        /* OpenDyslexic Font */
+        .opendyslexic {
+            font-family: 'OpenDyslexic', 'Open Sans', 'Lato', sans-serif !important;
+            line-height: 1.8;
         }
-    }
+    </style>
+</head>
+<body>
 
-    // Stocker les erreurs
-    if (!empty($errors)) {
-        $_SESSION['reset_errors'] = $errors;
-    }
+    <!-- Charger OpenDyslexic -->
+    <script>
+        function loadOpenDyslexicFont() {
+            if (!document.getElementById('opendyslexic-font')) {
+                const link = document.createElement('link');
+                link.id = 'opendyslexic-font';
+                link.rel = 'stylesheet';
+                link.href = 'https://fonts.cdnfonts.com/css/open-dyslexic';
+                document.head.appendChild(link);
+            }
+        }
+        loadOpenDyslexicFont();
+    </script>
 
-    // Régénérer le token CSRF
-    unset($_SESSION['csrf_token']);
-}
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="img/logo.png" class="logo-icon">
+                        <img src="img/logo.png" alt="Yggdrasil Logo" style="width: 40px; height: 40px;">
+                    </a>
+                    <div class="logo-text">Yggdrasil</div>
+                </div>
+                <nav>
+                    <a href="index.html" data-i18n="nav.home">Accueil</a>
+                    <a href="login.php" data-i18n="nav.login">Connexion</a>
+                </nav>
+            </div>
+        </div>
+    </header>
 
-// Générer un nouveau token CSRF pour le formulaire
-$csrf_token = generateCSRFToken();
+    <!-- Contrôles d'accessibilité -->
+    <div class="container">
+        <div class="accessibility-controls">
+            <button id="dyslexia-toggle" class="dyslexia-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M4 4a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 4zm0 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5z"/>
+                    <path d="M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm13 2v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1z"/>
+                </svg>
+                <span data-i18n="access.dyslexia">Mode Dyslexie</span>
+            </button>
+            <button id="theme-toggle" class="dyslexia-button">
+                🌙 <span data-i18n="access.dark">Passer en mode sombre</span>
+            </button>
+            <button id="lang-toggle" class="dyslexia-button">
+                🌍 <span id="lang-text">FR → EN → BR</span>
+            </button>
+        </div>
+    </div>
 
-// Redirection vers la page d'origine
-header('Location: forgot-password.php');
-exit;
-?>
+    <!-- Section Mot de passe oublié -->
+    <section class="forgot-password-section">
+        <div class="container">
+            <div class="forgot-card">
+                <h1 data-i18n="forgot.title">Mot de passe oublié ?</h1>
+                <p data-i18n="forgot.subtitle">Entrez votre email, nous vous enverrons un lien pour le réinitialiser.</p>
+
+                <!-- Message d'erreur -->
+                <?php if (isset($_SESSION['reset_errors'])): ?>
+                    <div class="error-message">
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <?php foreach ($_SESSION['reset_errors'] as $error): ?>
+                                <li><?= htmlspecialchars($error) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    <?php unset($_SESSION['reset_errors']); ?>
+                <?php endif; ?>
+
+                <!-- Message de succès -->
+                <?php if (isset($_SESSION['reset_success'])): ?>
+                    <div class="success-message">
+                        <?= htmlspecialchars($_SESSION['reset_success']) ?>
+                    </div>
+                    <?php unset($_SESSION['reset_success']); ?>
+                <?php endif; ?>
+
+                <!-- Formulaire -->
+                <form action="forgot-password-process.php" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
+                    <div class="form-group">
+                        <label for="email" data-i18n="forgot.email">Adresse e-mail</label>
+                        <input type="email" id="email" name="email" placeholder="vous@exemple.com" required>
+                    </div>
+                    <button type="submit" class="cta-button" data-i18n="forgot.submit">Envoyer le lien</button>
+                </form>
+
+                <div class="login-link">
+                    <a href="login.php" data-i18n="forgot.back">← Retour à la connexion</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Yggdrasil. 
+                <a href="#" onclick="openModal('privacy-modal')" data-i18n="footer.privacy">Confidentialité</a> • 
+                <a href="#" onclick="openModal('terms-modal')" data-i18n="footer.terms">CGU</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // === DICTIONNAIRE DE TRADUCTION ===
+        const translations = {
+            fr: {
+                'nav.home': 'Accueil',
+                'nav.login': 'Connexion',
+                'access.dyslexia': 'Mode Dyslexie',
+                'access.dark': 'Passer en mode sombre',
+                'forgot.title': 'Mot de passe oublié ?',
+                'forgot.subtitle': 'Entrez votre email, nous vous enverrons un lien pour le réinitialiser.',
+                'forgot.email': 'Adresse e-mail',
+                'forgot.submit': 'Envoyer le lien',
+                'forgot.back': '← Retour à la connexion',
+                'footer.privacy': 'Confidentialité',
+                'footer.terms': 'CGU'
+            },
+            en: {
+                'nav.home': 'Home',
+                'nav.login': 'Login',
+                'access.dyslexia': 'Dyslexia Mode',
+                'access.dark': 'Switch to Dark Mode',
+                'forgot.title': 'Forgot your password?',
+                'forgot.subtitle': 'Enter your email, we will send you a reset link.',
+                'forgot.email': 'Email Address',
+                'forgot.submit': 'Send Reset Link',
+                'forgot.back': '← Back to Login',
+                'footer.privacy': 'Privacy',
+                'footer.terms': 'Terms'
+            },
+            br: {
+                'nav.home': 'Degemer',
+                'nav.login': 'Kevreañ',
+                'access.dyslexia': 'Mod Dyslexie',
+                'access.dark': 'Trec\'h da gouloù tiñj',
+                'forgot.title': 'Ger-tremen forgetet ?',
+                'forgot.subtitle': 'Roit ho chomlec\'h postel, e vo kaset ur c\'hemenañ evit adsañset anezhañ.',
+                'forgot.email': 'Chomlec\'h postel',
+                'forgot.submit': 'Kas ar gemenñ',
+                'forgot.back': '← Distreiñ d\'ar gementadur',
+                'footer.privacy': 'Prevezded',
+                'footer.terms': 'Amplegadoù'
+            }
+        };
+
+        const languages = ['fr', 'en', 'br'];
+        const langNames = {
+            fr: 'FR → EN → BR',
+            en: 'EN → BR → FR',
+            br: 'BR → FR → EN'
+        };
+
+        function setLanguage(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.setAttribute('placeholder', translations[lang][key]);
+                    } else {
+                        el.textContent = translations[lang][key];
+                    }
+                }
+            });
+            document.getElementById('lang-text').textContent = langNames[lang];
+            document.documentElement.lang = lang;
+            localStorage.setItem('language', lang);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedLang = localStorage.getItem('language') || 'fr';
+            setLanguage(savedLang);
+
+            document.getElementById('lang-toggle').addEventListener('click', function () {
+                const currentLang = localStorage.getItem('language') || 'fr';
+                const currentIndex = languages.indexOf(currentLang);
+                const nextLang = languages[(currentIndex + 1) % 3];
+                setLanguage(nextLang);
+            });
+
+            // === MODE DYSLEXIE ===
+            const dyslexiaToggle = document.getElementById('dyslexia-toggle');
+            const body = document.body;
+            const savedDyslexia = localStorage.getItem('dyslexiaMode') === 'true';
+
+            if (savedDyslexia) {
+                body.classList.add('opendyslexic');
+            }
+
+            function updateDyslexiaButton() {
+                const lang = localStorage.getItem('language') || 'fr';
+                const text = body.classList.contains('opendyslexic')
+                    ? translations[lang]['access.dyslexia'] + ' (activé)'
+                    : translations[lang]['access.dyslexia'];
+                dyslexiaToggle.classList.toggle('active', body.classList.contains('opendyslexic'));
+                dyslexiaToggle.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M4 4a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 4zm0 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5z"/>
+                        <path d="M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm13 2v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1z"/>
+                    </svg>
+                    <span>${text}</span>
+                `;
+            }
+
+            dyslexiaToggle.addEventListener('click', () => {
+                body.classList.toggle('opendyslexic');
+                localStorage.setItem('dyslexiaMode', body.classList.contains('opendyslexic') ? 'true' : 'false');
+                updateDyslexiaButton();
+            });
+            updateDyslexiaButton();
+
+            // === MODE SOMBRE ===
+            const themeToggle = document.getElementById('theme-toggle');
+            const savedTheme = localStorage.getItem('theme') || 'light';
+
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+            }
+
+            function updateThemeButton() {
+                const lang = localStorage.getItem('language') || 'fr';
+                const isDark = body.classList.contains('dark-mode');
+                const text = isDark 
+                    ? translations[lang]['access.dark'].replace('sombre', 'clair') 
+                    : translations[lang]['access.dark'];
+                themeToggle.innerHTML = (isDark ? '☀️ ' : '🌙 ') + `<span>${text}</span>`;
+            }
+
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+                updateThemeButton();
+            });
+            updateThemeButton();
+        });
+
+        // === MODALS (réutilisé depuis index.html) ===
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.modal').style.display = 'none';
+            });
+        });
+        window.addEventListener('click', e => {
+            document.querySelectorAll('.modal').forEach(modal => {
+                if (e.target === modal) modal.style.display = 'none';
+            });
+        });
+    </script>
+
+    <!-- Modals Légaux -->
+    <div id="terms-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="modal.terms_title">Conditions Générales</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p data-i18n="modal.terms_p1">Bienvenue sur Yggdrasil. En utilisant notre service, vous acceptez ces conditions.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="privacy-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="modal.privacy_title">Politique de Confidentialité</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p data-i18n="modal.privacy_p1">Nous respectons votre vie privée. Vos données sont sécurisées et ne seront jamais partagées.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

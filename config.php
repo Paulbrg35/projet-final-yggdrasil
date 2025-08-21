@@ -4,6 +4,9 @@ if (!defined('YGGDRASIL_CONFIG')) {
     http_response_code(403);
     die('Accès interdit');
 }
+// Augmenter la durée de la session (en secondes)
+ini_set('session.gc_maxlifetime', 3600); // 1 heure
+session_set_cookie_params(3600);
 
 // Démarrer la session si ce n'est pas déjà fait
 if (session_status() === PHP_SESSION_NONE) {
