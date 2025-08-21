@@ -1,7 +1,10 @@
 <?php
-session_start();
 define('YGGDRASIL_CONFIG', true);
 require_once 'config.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 
 // Générer un token CSRF
 if (!isset($_SESSION['csrf_token'])) {

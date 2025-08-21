@@ -1,5 +1,9 @@
 <?php
-session_start();
+define('YGGDRASIL_CONFIG', true);
+require_once 'config.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // === CONFIGURATION ===
 require_once 'config.php'; // PDO
