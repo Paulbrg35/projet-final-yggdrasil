@@ -2,6 +2,8 @@
 session_start();
 define('YGGDRASIL_CONFIG', true);
 require_once 'config.php';
+/** @var PDO $pdo */
+$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
 
 $token = $_GET['token'] ?? '';
 

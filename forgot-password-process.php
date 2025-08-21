@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once 'config.php'; // Assurez-vous que config.php définit YGGDRASIL_CONFIG
+/** @var PDO $pdo */
+$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
 
 // Désactiver l'affichage des erreurs en production
 if (isset($_ENV['APP_ENV']) && $_ENV['APP_ENV'] !== 'development') {
