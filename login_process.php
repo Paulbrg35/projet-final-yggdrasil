@@ -4,6 +4,9 @@ session_start();
 // === CONFIGURATION ===
 require_once 'config.php'; // PDO
 
+/** @var PDO $pdo */
+$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+
 // Initialisation
 $errors = [];
 $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);

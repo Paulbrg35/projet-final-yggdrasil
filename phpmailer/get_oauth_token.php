@@ -119,37 +119,32 @@ $options = [];
 $provider = null;
 
 switch ($providerName) {
-    case 'Google':
-        $provider = new Google($params);
-        $options = [
-            'scope' => [
-                'https://mail.google.com/'
-            ]
-        ];
-        break;
     case 'Yahoo':
         $provider = new Yahoo($params);
+        $options  = []; // pas d'options supplémentaires
         break;
+
     case 'Microsoft':
         $provider = new Microsoft($params);
-        $options = [
+        $options  = [
             'scope' => [
                 'wl.imap',
                 'wl.offline_access'
             ]
         ];
         break;
-    case 'Azure':
-        $params['tenantId'] = $tenantId;
 
+    case 'Azure':
+        // S'assure que tenantId est défini
+        if (!empty($tenantId)) {
+            $params['tenantId'] = $tenantId;
+        }
         $provider = new Azure($params);
-        $options = [
-            'scope' => [
-                'https://outlook.office.com/SMTP.Send',
-                'offline_access'
-            ]
-        ];
+        $options  = [];
         break;
+
+    default:
+        throw new InvalidArgumentException("Provider OAuth inconnu : $providerName");
 }
 
 if (null === $provider) {

@@ -1,19 +1,28 @@
 <?php
 session_start();
-require_once 'config.php';
-require_once 'tcpdf/tcpdf.php'; // Chemin vers TCPDF
+define('YGGDRASIL_CONFIG', true);
+require_once __DIR__ . '/config.php';
 
+// Inclure d'abord la configuration TCPDF puis la classe
+require_once __DIR__ . '/tcpdf/config/tcpdf_config.php';
+require_once __DIR__ . '/tcpdf/tcpdf.php';
+
+// Sécurité : accès réservé
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Récupérer les données
+// Récupérer les données utilisateur
 $stmt = $pdo->prepare("SELECT firstname, lastname, email FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
 
-// Créer un PDF
+if (!$user) {
+    exit('Utilisateur introuvable.');
+}
+
+// Création du PDF
 $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
 $pdf->SetCreator('Yggdrasil');
@@ -43,6 +52,6 @@ $html = '
 
 $pdf->writeHTML($html, true, false, true, false, '');
 
-// Télécharger le PDF
-$pdf->Output('arbre_yggdrasil.pdf', 'D'); // 'D' = téléchargement
+// Sortie PDF (D = téléchargement)
+$pdf->Output('arbre_yggdrasil.pdf', 'D');
 exit();
