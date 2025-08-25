@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - Yggdrasil</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/open-dyslexic" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="contact.css">
+</head>
+<body>
+
+    <!-- === HEADER === -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html" class="logo-link">
+                        <img src="../img/logo.png" alt="Logo Yggdrasil" class="logo-img">
+                    </a>
+                    <div class="logo-text">Yggdrasil</div>
+                </div>
+                <nav>
+                    <a href="index.html" data-i18n="nav.home">Accueil</a>
+                    <a href="faq.php" data-i18n="nav.faq">FAQ</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <?php
+session_start();
+$error = $_SESSION['contact_error'] ?? '';
+$success = $_SESSION['contact_success'] ?? '';
+unset($_SESSION['contact_error'], $_SESSION['contact_success']);
+?>
+<?php if ($error): ?>
+    <div class="alert alert-error">
+        <?= htmlspecialchars($error) ?>
+    </div>
+<?php endif; ?>
+<?php if ($success): ?>
+    <div class="alert alert-success">
+        <?= htmlspecialchars($success) ?>
+    </div>
+<?php endif; ?>
+
+    <!-- === CONTRÔLES D'ACCESSIBILITÉ === -->
+    <div class="container">
+        <div class="accessibility-controls">
+            <button id="dyslexia-toggle" class="dyslexia-button">
+                🔤 <span data-i18n="access.dyslexia">Mode Dyslexie</span>
+            </button>
+            <button id="theme-toggle" class="dyslexia-button">
+                🌙 <span data-i18n="access.dark">Passer en mode sombre</span>
+            </button>
+            <button id="lang-toggle" class="dyslexia-button">
+                🌍 <span id="lang-text">FR → EN → BR</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- === SECTION CONTACT === -->
+    <section class="contact-section">
+        <div class="container">
+            <div class="section-header">
+                <h1 data-i18n="contact.title">Nous Contacter</h1>
+                <p data-i18n="contact.subtitle">Une question ? Une suggestion ? Nous sommes là pour vous aider.</p>
+            </div>
+
+            <div class="contact-grid">
+                <!-- Formulaire -->
+                <div class="contact-form">
+                    <form id="contact-form" action="contact-process.php" method="POST">
+                        <input type="hidden" name="csrf_token" value="TOKEN_GENERE_ICI">
+
+                        <div class="form-group">
+                            <label for="name" data-i18n="contact.name">Votre nom</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" data-i18n="contact.email">Votre email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject" data-i18n="contact.subject">Sujet</label>
+                            <select id="subject" name="subject" required>
+                                <option value="support">Support technique</option>
+                                <option value="account">Problème de compte</option>
+                                <option value="feature">Suggestion de fonctionnalité</option>
+                                <option value="other">Autre</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message" data-i18n="contact.message">Message</label>
+                            <textarea id="message" name="message" rows="6" required></textarea>
+                        </div>
+
+                        <button type="submit" class="cta-button" data-i18n="contact.send">Envoyer le message</button>
+                    </form>
+                </div>
+
+                <!-- Informations -->
+                <div class="contact-info">
+                    <h2 data-i18n="contact.info">Informations de contact</h2>
+                    <ul>
+                        <li>📧 <strong>Email :</strong> <a href="mailto:yggdrasil.genealogie@gmail.com">yggdrasil.genealogie@gmail.com</a></li>
+                        <li>🏢 <strong>Adresse :</strong> 35133 Laignelet, France</li>
+                        <li>🕒 <strong>Horaires :</strong> Lun-Ven 8h-18h</li>
+                    </ul>
+
+                    <div class="social-links">
+                        <h3 data-i18n="contact.follow">Suivez-nous</h3>
+                        <a href="https://www.facebook.com/groups/1472379054003575" aria-label="Facebook">Facebook📘</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- === FOOTER === -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Yggdrasil. 
+                <a href="privacy.html" data-i18n="footer.privacy">Confidentialité</a> • 
+                <a href="terms.html" data-i18n="footer.terms">CGU</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- === SCRIPTS === -->
+    <script src="contact.js"></script>
+</body>
+</html>

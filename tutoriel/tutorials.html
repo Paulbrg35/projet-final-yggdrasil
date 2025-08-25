@@ -1,58 +1,78 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="tutorials.css">
-    <link href="https://fonts.cdnfonts.com/css/open-dyslexic" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Guide d'utilisation - Mon Arbre Généalogique</title>
     
+    <!-- Feuille de style CSS -->
+    <link rel="stylesheet" href="tutorials.css" />
+    
+    <!-- Police OpenDyslexic -->
+    <link href="https://fonts.cdnfonts.com/css/open-dyslexic" rel="stylesheet" />
 </head>
 <body>
+        <!-- === HEADER === -->
+    <header>
+        <div class="container">
+    <div class="logo">
+    <a href="#" onclick="openModal('logo-modal')" class="logo-icon">
+        <img src="../img/logo.png" alt="Yggdrasil Logo" style="width: 40px; height: 40px;">
+    </a>
+    <div class="logo-text">Yggdrasil</div>
+</div>
+            <nav>
+                <a href="http://localhost:8080/projet_final/projet-final-yggdrasil/dashboard.html">Accueil</a>
+                <a href="http://localhost:8080/projet_final/projet-final-yggdrasil/login.html">Connexion</a>
+            </nav>
+        </div>
+    </header>
+    <!-- === CONTENU PRINCIPAL === -->
     <div class="container">
         <div class="header">
-            <h1>🌳 Guide d'utilisation</h1>
-            <p>Apprenez à créer et gérer votre arbre généalogique</p>
-            <div class="progress-tracker">
-                <div class="progress-fill" id="progressBar"></div>
+            <h1>🌳 <span data-i18n="title">Guide d'utilisation</span></h1>
+            <p><span data-i18n="subtitle">Apprenez à créer et gérer votre arbre généalogique</span></p>
+
+            <!-- Boutons d'accessibilité -->
+            <div class="accessibility-controls">
+                <button id="dyslexia-toggle" class="accessibility-btn" aria-label="Activer le mode dyslexie">
+                    🔤 <span data-i18n="access.dyslexia">Dyslexie</span>
+                </button>
+                <button id="theme-toggle" class="accessibility-btn" aria-label="Basculer le thème">
+                    🌙 <span data-i18n="access.dark">Sombre</span>
+                </button>
+                <button id="lang-toggle" class="accessibility-btn" aria-label="Changer la langue">
+                    🌍 <span id="lang-text">FR → EN → BR</span>
+                </button>
             </div>
+        </div>
+
+        <!-- Modal pour l'image agrandie -->
+<div id="logo-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <img src="../img/logo.png" alt="Logo Yggdrasil" class="modal-img">
+    </div>
+</div>
+
+        <!-- Barre de progression -->
+        <div class="progress-tracker">
+            <div class="progress-fill" id="progressBar"></div>
         </div>
 
         <!-- Bienvenue -->
         <div class="welcome-banner" id="welcome">
-            <h2>👋 Bienvenue sur votre plateforme généalogique !</h2>
-            <p style="font-size: 1.1em; margin: 15px 0;">Ce guide vous accompagnera pas à pas pour découvrir toutes les fonctionnalités et créer votre premier arbre généalogique.</p>
-            
-            <div class="feature-grid" style="margin-top: 30px;">
-                <div class="feature-card" onclick="goToStep(1)">
-                    <span class="feature-icon">🚀</span>
-                    <h3>Premiers pas</h3>
-                    <p>Créez votre profil et commencez votre arbre</p>
-                </div>
-                <div class="feature-card" onclick="goToStep(2)">
-                    <span class="feature-icon">👥</span>
-                    <h3>Ajouter des proches</h3>
-                    <p>Construisez votre famille étape par étape</p>
-                </div>
-                <div class="feature-card" onclick="goToStep(3)">
-                    <span class="feature-icon">🎨</span>
-                    <h3>Personnaliser</h3>
-                    <p>Ajoutez photos, documents et souvenirs</p>
-                </div>
-                <div class="feature-card" onclick="goToStep(4)">
-                    <span class="feature-icon">🔍</span>
-                    <h3>Explorer</h3>
-                    <p>Naviguez et découvrez votre histoire</p>
-                </div>
-            </div>
+            <h2>👋 <span data-i18n="welcome.title">Bienvenue sur votre plateforme généalogique !</span></h2>
+            <p style="font-size: 1.1em; margin: 15px 0;">
+                <span data-i18n="welcome.text">Ce guide vous accompagnera pas à pas pour découvrir toutes les fonctionnalités et créer votre premier arbre généalogique.</span>
+            </p>
         </div>
 
         <!-- Étape 1: Premiers pas -->
         <div class="tutorial-section hidden" id="step1">
-            <h2><span class="step-number">1</span>Premiers pas - Créer votre profil</h2>
-            
+            <h2><span class="step-number">1</span> Premiers pas - Créer votre profil</h2>
             <p>Commencez par vous ajouter comme première personne de votre arbre généalogique. C'est le point de départ de votre histoire familiale !</p>
-
+            
             <div class="demo-interface">
                 <div class="mock-toolbar">
                     <div class="mock-button active">✏️ Modifier mon profil</div>
@@ -60,7 +80,7 @@
                     <div class="mock-button">📄 Documents</div>
                 </div>
                 <div class="tree-simulation">
-                    <div class="person-node" id="user-node" onclick="simulateClick('user')">
+                    <div class="person-node" id="user-node" onclick="simulateClick()">
                         VOUS
                     </div>
                 </div>
@@ -80,17 +100,11 @@
                     <p>Vous pouvez contrôler qui voit quelles informations. Commencez privé et partagez selon vos souhaits.</p>
                 </div>
             </div>
-
-            <div class="highlight-box">
-                <h3>💡 Conseil important</h3>
-                <p>N'hésitez pas à commencer avec les informations que vous connaissez. Vous pourrez toujours compléter et modifier plus tard !</p>
-            </div>
         </div>
 
         <!-- Étape 2: Ajouter des proches -->
         <div class="tutorial-section hidden" id="step2">
-            <h2><span class="step-number">2</span>Ajouter vos proches</h2>
-            
+            <h2><span class="step-number">2</span> Ajouter vos proches</h2>
             <p>Maintenant, construisons votre famille ! Commencez par vos parents, puis vos enfants, et étendez progressivement.</p>
 
             <div class="demo-interface">
@@ -127,8 +141,7 @@
 
         <!-- Étape 3: Personnaliser -->
         <div class="tutorial-section hidden" id="step3">
-            <h2><span class="step-number">3</span>Enrichir avec photos et souvenirs</h2>
-            
+            <h2><span class="step-number">3</span> Enrichir avec photos et souvenirs</h2>
             <p>Donnez vie à votre arbre en ajoutant des photos, documents et anecdotes qui racontent votre histoire familiale.</p>
 
             <div class="demo-interface">
@@ -175,17 +188,11 @@
                     <p>Dates de mariage, déménagements, diplômes, événements marquants...</p>
                 </div>
             </div>
-
-            <div class="highlight-box">
-                <h3>🗂️ Organisation des médias</h3>
-                <p>Créez des albums thématiques (mariages, enfance, voyages...) pour mieux organiser vos souvenirs familiaux.</p>
-            </div>
         </div>
 
         <!-- Étape 4: Navigation et exploration -->
         <div class="tutorial-section hidden" id="step4">
-            <h2><span class="step-number">4</span>Explorer et naviguer</h2>
-            
+            <h2><span class="step-number">4</span> Explorer et naviguer</h2>
             <p>Découvrez toutes les façons de naviguer et explorer votre arbre généalogique.</p>
 
             <div class="demo-interface">
@@ -235,8 +242,7 @@
 
         <!-- Étape 5: Fonctionnalités avancées -->
         <div class="tutorial-section hidden" id="step5">
-            <h2><span class="step-number">5</span>Fonctionnalités avancées</h2>
-            
+            <h2><span class="step-number">5</span> Fonctionnalités avancées</h2>
             <p>Découvrez les fonctionnalités qui vous aideront à aller plus loin dans votre recherche généalogique.</p>
 
             <div class="feature-grid">
@@ -271,136 +277,15 @@
         <!-- Navigation -->
         <div class="navigation-buttons">
             <button class="nav-btn" id="prevBtn" onclick="previousStep()" disabled>
-                ⬅️ Précédent
-            </button>
-            <button class="nav-btn" onclick="goToWelcome()">
-                🏠 Accueil
+                ⬅️ <span data-i18n="nav.prev">Précédent</span>
             </button>
             <button class="nav-btn" id="nextBtn" onclick="nextStep()">
-                Suivant ➡️
+                <span data-i18n="nav.next">Suivant</span> ➡️
             </button>
         </div>
     </div>
 
-    <script>
-        let currentStep = 0;
-        const totalSteps = 5;
-
-        function updateProgress() {
-            const progress = (currentStep / totalSteps) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-        }
-
-        function showStep(step) {
-            // Cacher toutes les sections
-            document.getElementById('welcome').classList.add('hidden');
-            for (let i = 1; i <= totalSteps; i++) {
-                document.getElementById(`step${i}`).classList.add('hidden');
-            }
-
-            // Afficher la section demandée
-            if (step === 0) {
-                document.getElementById('welcome').classList.remove('hidden');
-            } else {
-                document.getElementById(`step${step}`).classList.remove('hidden');
-            }
-
-            // Mettre à jour les boutons
-            document.getElementById('prevBtn').disabled = step === 0;
-            document.getElementById('nextBtn').disabled = step === totalSteps;
-            
-            if (step === totalSteps) {
-                document.getElementById('nextBtn').innerHTML = '🎉 Terminé !';
-            } else {
-                document.getElementById('nextBtn').innerHTML = 'Suivant ➡️';
-            }
-
-            currentStep = step;
-            updateProgress();
-        }
-
-        function goToStep(step) {
-            showStep(step);
-        }
-
-        function goToWelcome() {
-            showStep(0);
-        }
-
-        function nextStep() {
-            if (currentStep < totalSteps) {
-                showStep(currentStep + 1);
-            }
-        }
-
-        function previousStep() {
-            if (currentStep > 0) {
-                showStep(currentStep - 1);
-            }
-        }
-
-        // Fonctions de simulation
-        function simulateClick(type) {
-            const node = document.getElementById('user-node');
-            node.style.transform = 'scale(1.3)';
-            setTimeout(() => {
-                node.style.transform = 'scale(1)';
-                alert('💡 Dans la vraie interface, ceci ouvrirait le formulaire d\'édition de votre profil !');
-            }, 200);
-        }
-
-        function addFamily(type) {
-            const messages = {
-                parent: '👨‍👩‍👦 Vous ajouteriez un parent à votre arbre',
-                child: '👶 Vous ajouteriez un enfant à votre arbre',
-                spouse: '💑 Vous ajouteriez votre conjoint(e)',
-                sibling: '👫 Vous ajouteriez un frère ou une sœur'
-            };
-            
-            // Animation du bouton
-            event.target.classList.add('active');
-            setTimeout(() => {
-                event.target.classList.remove('active');
-                alert(`💡 ${messages[type]}\n\nDans la vraie interface, un formulaire s'ouvrirait pour saisir les informations de cette personne.`);
-            }, 300);
-        }
-
-        // Animation des nœuds au chargement
-        document.addEventListener('DOMContentLoaded', function() {
-            showStep(0);
-            
-            // Animation des cartes de fonctionnalités
-            const cards = document.querySelectorAll('.feature-card');
-            cards.forEach((card, index) => {
-                card.style.animationDelay = `${index * 0.1}s`;
-                card.classList.add('fadeInUp');
-            });
-        });
-
-        // Gestion du clavier
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowLeft') {
-                previousStep();
-            } else if (event.key === 'ArrowRight') {
-                nextStep();
-            } else if (event.key === 'Home') {
-                goToWelcome();
-            }
-        });
-
-        // Auto-progression (optionnel)
-        function startAutoTour() {
-            let step = 1;
-            const interval = setInterval(() => {
-                if (step <= totalSteps) {
-                    showStep(step);
-                    step++;
-                } else {
-                    clearInterval(interval);
-                    alert('🎉 Tour terminé ! Vous pouvez maintenant explorer librement.');
-                }
-            }, 10000); // 10 secondes par étape
-        }
-    </script>
+    <!-- Script JavaScript -->
+    <script src="tutorials.js"></script>
 </body>
 </html>
